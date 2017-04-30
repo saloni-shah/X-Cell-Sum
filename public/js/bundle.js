@@ -9,7 +9,7 @@ tableview.init();
 const getRange = function(fromNum, toNum){
 	return Array.from({length: toNum-fromNum+1}, (unused,i) => i+fromNum);
 };
-const getLetterRange = function(firstLetter='A', numLetters=4){
+const getLetterRange = function(firstLetter, numLetters){
 	const rangeStart = firstLetter.charCodeAt(0);
 	const rangeEnd = rangeStart + numLetters - 1;
 	return getRange(rangeStart,rangeEnd)
@@ -80,9 +80,7 @@ class TableView{
 		this.headerRowEl = document.querySelector('THEAD TR');
 		this.sheetbodyEl = document.querySelector('TBODY');
 		this.formulabarEl = document.querySelector('#formulabar');
-		this.row = document.querySelector('#row');
-		this.column = document.querySelector('#column');
-		//this.RowHeaderEl = document.querySelector('TBODY TR TH');
+	
 	}
 	initCurrentCell(){
 		this.currentCellLocation = {col:0,row:0};
@@ -99,10 +97,10 @@ class TableView{
 	renderTable(){
 		this.renderTableHeader();
 		this.renderTableBody();
+
 	}
 	renderTableHeader(){
 		removeChildren(this.headerRowEl);
-		this.headerRowEl.appendChild(createTH());
 		getLetterRange('A',this.model.numCols)
 		.map(colLabel => createTH(colLabel))
 		.forEach(th => this.headerRowEl.appendChild(th));
@@ -115,137 +113,43 @@ class TableView{
 		const fragment = document.createDocumentFragment();
 		for(let row=0;row<this.model.numRows;row++){
 			const tr = createTR();
-			tr.appendChild(createTH(row+1));
 			for(let col=0;col<this.model.numCols;col++){
 				const position = {col:col,row:row};
 				const value = this.model.getValue(position);
 				const td = createTD(value);
-				if(this.isCurrentCell(col,row) && !this.checkLastRow(row)){
+				if(this.isCurrentCell(col,row)){
 					td.className = 'current-cell';
 				}
 
 				tr.appendChild(td);
 			}
 			fragment.appendChild(tr);
-			if (this.checkLastRow(row)){
-				tr.className = 'last-row';
-			}
 		}
 		removeChildren(this.sheetbodyEl);
 		this.sheetbodyEl.appendChild(fragment);
-	}
-	checkLastRow(row){
-		return row+1===this.model.numRows;
 	}
 	attachEventHandlers(){
 		this.sheetbodyEl.addEventListener('click',this.handleSheetClick.bind(this));
 		this.formulabarEl.addEventListener('keyup',this.handleFormulaBarChange.bind(this));
-		this.row.addEventListener('click',this.addRow.bind(this));
-		this.column.addEventListener('click',this.addColumn.bind(this));
-		this.headerRowEl.addEventListener('click',this.highlightColumn.bind(this));
-		//this.RowHeaderEl.addEventListener('click',this.highlightRow.bind(this));
 	}
 	isColumnHeaderRow(row){
 		return row < 1;
 	}
-	isRowHeaderColumn(col){
-		return col < 1;
-	}
-	addRow(){
-		this.model.numRows++;
-		this.renderTableBody();
-	}
-	addColumn(){
-		this.model.numCols++;
-		this.renderTable();
-	}
-	highlightColumn(e){
-		var colTarget = e.target.cellIndex;
-		var rowTarget = e.target.parentElement.rowIndex;
-		const fragment = document.createDocumentFragment();
-		for(let row=0;row<this.model.numRows;row++){
-			const tr = createTR();
-			tr.appendChild(createTH(row+1));
-			if(!this.checkLastRow(row)){
-				this.currentCellLocation = {col:colTarget-1,row:row};
-			}
-			for(let col=0;col<this.model.numCols;col++){
-				const position = {col:col,row:row};
-				const value = this.model.getValue(position);
-				const td = createTD(value);
-				if(this.isCurrentCell(col,row) && !this.checkLastRow(row)){
-					td.className = 'highlighted';
-				}
-
-				tr.appendChild(td);
-			}
-			fragment.appendChild(tr);
-			if (this.checkLastRow(row)){
-				tr.className = 'last-row';
-			}
-		}
-		removeChildren(this.sheetbodyEl);
-		this.sheetbodyEl.appendChild(fragment);
-	}
-	highlightRow(colTarget,rowTarget){
-		var colTarget = colTarget;
-		var rowTarget = rowTarget;
-		const fragment = document.createDocumentFragment();
-		for(let row=0;row<this.model.numRows;row++){
-			const tr = createTR();
-			tr.appendChild(createTH(row+1));
-			for(let col=0;col<this.model.numCols;col++){
-				this.currentCellLocation = {col:col,row:rowTarget-1};
-				const position = {col:col,row:row};
-				const value = this.model.getValue(position);
-				const td = createTD(value);
-				if(this.isCurrentCell(col,row) && !this.checkLastRow(row)){
-					td.className = 'highlighted';
-				}
-
-				tr.appendChild(td);
-			}
-			fragment.appendChild(tr);
-			if (this.checkLastRow(row)){
-				tr.className = 'last-row';
-			}
-		}
-		removeChildren(this.sheetbodyEl);
-		this.sheetbodyEl.appendChild(fragment);
-	}
 	handleFormulaBarChange(e){
 		const value = this.formulabarEl.value;
 		this.model.setValue(this.currentCellLocation,value);
-		this.findSum(this.currentCellLocation);
 		this.renderTableBody();
 	}
-	findSum(currentCellLocation){
-		var value  = this.model.getValue(currentCellLocation);
-		var sum = 0;
-		for(let row=0;row<this.model.numRows-1;row++){
-			var position = {col:currentCellLocation.col,row:row};
-			var value = this.model.getValue(position);
-			if(!Number.isNaN(parseInt(value))){
-				sum += parseInt(value);
-			}
-		}
-		var sumLocation = {col:currentCellLocation.col,row:this.model.numRows-1};
-		//console.log(sumLocation);console.log(sum);
-		this.model.setValue(sumLocation,sum);
-	}
 	handleSheetClick(e){
-		var col = e.target.cellIndex;
+		const col = e.target.cellIndex;
 		var row = e.target.parentElement.rowIndex;
-		if(e.target.nodeName=='TD'){
-			if(!this.isColumnHeaderRow(row) || !this.isRowHeaderColumn(col)){
-				row = row-1; col = col-1;
-				this.currentCellLocation = {col:col,row:row};
-				this.renderTableBody();
-			}
-			this.renderFormulaBar();
-		}else{
-			this.highlightRow(col,row);
+
+		if(!this.isColumnHeaderRow(row)){
+			row = row-1;
+			this.currentCellLocation = {col:col,row:row};
+			this.renderTableBody();
 		}
+		this.renderFormulaBar();
 	}
 }
 module.exports = TableView;
