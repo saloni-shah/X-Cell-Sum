@@ -16,10 +16,9 @@ class TableView{
     this.formulabarEl = document.querySelector('#formulabar');
     this.row = document.querySelector('#row');
     this.column = document.querySelector('#column');
-    //this.RowHeaderEl = document.querySelector('TBODY TR TH');
   }
   initCurrentCell(){
-    this.currentCellLocation = {col:0,row:0};
+    this.currentCellLocation = {col: 0, row: 0};
     this.renderFormulaBar();
   }
   normalizeValueForRendering(value){
@@ -51,7 +50,7 @@ class TableView{
       const tr = createTR();
       tr.appendChild(createTH(row+1));
       for(let col = 0; col < this.model.numCols; col++){
-        const position = {col:col,row:row};
+        const position = {col: col, row: row};
         const value = this.model.getValue(position);
         const td = createTD(value);
         if(this.isCurrentCell(col,row) && !this.checkLastRow(row)){
@@ -77,7 +76,6 @@ class TableView{
     this.row.addEventListener('click',this.addRow.bind(this));
     this.column.addEventListener('click',this.addColumn.bind(this));
     this.headerRowEl.addEventListener('click',this.highlightColumn.bind(this));
-    //this.RowHeaderEl.addEventListener('click',this.highlightRow.bind(this));
   }
   isColumnHeaderRow(row){
     return row < 1;
@@ -101,10 +99,10 @@ class TableView{
       const tr = createTR();
       tr.appendChild(createTH(row + 1));
       if(!this.checkLastRow(row)){
-        this.currentCellLocation = {col:colTarget-1,row:row};
+        this.currentCellLocation = {col: colTarget-1, row: row};
       }
       for(let col = 0; col < this.model.numCols; col++){
-        const position = {col:col,row:row};
+        const position = {col: col, row: row};
         const value = this.model.getValue(position);
         const td = createTD(value);
         if(this.isCurrentCell(col,row) && !this.checkLastRow(row)){
@@ -129,8 +127,8 @@ class TableView{
       const tr = createTR();
       tr.appendChild(createTH(row + 1));
       for(let col = 0; col < this.model.numCols; col++){
-        this.currentCellLocation = {col:col,row:rowTargetVal-1};
-        const position = {col:col,row:row};
+        this.currentCellLocation = {col: col, row: rowTargetVal-1};
+        const position = {col: col, row: row};
         const value = this.model.getValue(position);
         const td = createTD(value);
         if(this.isCurrentCell(col,row) && !this.checkLastRow(row)){
@@ -154,18 +152,16 @@ class TableView{
     this.renderTableBody();
   }
   findSum(currentCellLocation){
-    //let value  = this.model.getValue(currentCellLocation);
     let value;
     let sum = 0;
     for(let row = 0; row < this.model.numRows-1; row++){
-      const position = {col:currentCellLocation.col,row:row};
+      const position = {col: currentCellLocation.col, row: row};
       value = this.model.getValue(position);
       if(!Number.isNaN(parseInt(value))){
         sum += parseInt(value);
       }
     }
-    const sumLocation = {col:currentCellLocation.col,row:this.model.numRows-1};
-    //console.log(sumLocation);console.log(sum);
+    const sumLocation = {col: currentCellLocation.col, row: this.model.numRows-1};
     this.model.setValue(sumLocation,sum);
   }
   handleSheetClick(e){
@@ -174,11 +170,11 @@ class TableView{
     if(e.target.nodeName=='TD'){
       if(!this.isColumnHeaderRow(row) || !this.isRowHeaderColumn(col)){
         row = row-1; col = col-1;
-        this.currentCellLocation = {col:col,row:row};
+        this.currentCellLocation = {col: col, row: row};
         this.renderTableBody();
       }
       this.renderFormulaBar();
-    }else{
+    } else {
       this.highlightRow(col,row);
     }
   }
